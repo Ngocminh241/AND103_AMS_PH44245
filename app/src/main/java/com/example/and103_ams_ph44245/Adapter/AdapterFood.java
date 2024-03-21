@@ -14,15 +14,27 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.and103_ams_ph44245.Model.Food;
 import com.example.and103_ams_ph44245.R;
+import com.example.and103_ams_ph44245.service.APIService;
 
 import java.util.ArrayList;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AdapterFood extends RecyclerView.Adapter<AdapterFood.ViewHolder> {
     private Context context;
     private ArrayList<Food> list;
+    APIService apiService;
     public AdapterFood(Context context, ArrayList<Food> list) {
         this.context = context;
         this.list = list;
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(APIService.DOMAIN)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        apiService = retrofit.create(APIService.class);
     }
 
     @NonNull

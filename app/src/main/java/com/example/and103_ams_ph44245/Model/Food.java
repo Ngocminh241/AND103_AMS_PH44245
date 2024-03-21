@@ -1,5 +1,7 @@
 package com.example.and103_ams_ph44245.Model;
 
+import okhttp3.MultipartBody;
+
 public class Food {
     private String _id;
     private String image;
@@ -8,12 +10,15 @@ public class Food {
     private int quantity;
     private String describe;
 
-    public Food() {
-    }
-
     public Food(String _id, String image, String name, double price, int quantity, String describe) {
         this._id = _id;
         this.image = image;
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+        this.describe = describe;
+    }
+    public Food(String name, double price, int quantity, String describe) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;

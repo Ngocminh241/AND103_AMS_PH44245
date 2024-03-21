@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.and103_ams_ph44245.Adapter.AdapterFood;
 import com.example.and103_ams_ph44245.Model.Food;
 import com.example.and103_ams_ph44245.service.APIService;
 import com.google.logging.type.HttpRequest;
@@ -33,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -51,6 +53,10 @@ public class Add_UpdateActivity extends AppCompatActivity {
     File file;
     private HttpRequest httpRequest;
     APIService apiService;
+
+    List<Food> sanphamModels;
+
+    AdapterFood adapterSanpham;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,15 +107,15 @@ public class Add_UpdateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String name = edt_name.getText().toString().trim();
-                String price = edt_price.getText().toString().trim();
-                String quantity = edt_quantity.getText().toString().trim();
+                Double price = Double.valueOf(edt_price.getText().toString().trim());
+                Integer quantity = Integer.valueOf(edt_quantity.getText().toString().trim());
                 String describe = edt_describe.getText().toString().trim();
 
-                if (!name.isEmpty() || !price.isEmpty() || !quantity.isEmpty() || !describe.isEmpty()) {
-                    RequestBody _name = RequestBody.create(MediaType.parse("multipart/form-data"), name);
-                    RequestBody _price = RequestBody.create(MediaType.parse("multipart/form-data"), price);
-                    RequestBody _quantity = RequestBody.create(MediaType.parse("multipart/form-data"), quantity);
-                    RequestBody _describe = RequestBody.create(MediaType.parse("multipart/form-data"), describe);
+                if (!name.isEmpty() && !price.equals(null) && !quantity.equals(null) && !describe.isEmpty()) {
+//                    RequestBody _name = RequestBody.create(MediaType.parse("multipart/form-data"), name);
+//                    RequestBody _price = RequestBody.create(MediaType.parse("multipart/form-data"), price);
+//                    RequestBody _quantity = RequestBody.create(MediaType.parse("multipart/form-data"), quantity);
+//                    RequestBody _describe = RequestBody.create(MediaType.parse("multipart/form-data"), describe);
                     MultipartBody.Part multipartBody;
 
                     if (file != null) {
@@ -118,18 +124,26 @@ public class Add_UpdateActivity extends AppCompatActivity {
                     } else {
                         multipartBody = null;
                     }
-                    Call<Response<Food>> call = apiService.addFood(multipartBody, _name, _price, _quantity, _describe);
 
-                    call.enqueue(new Callback<Response<Food>>() {
+
+                    Food newSanPham = new Food(name, price, quantity, describe);
+
+                    Call<Food> call = apiService.addSanpham(newSanPham);
+
+//                    Call<Response<Food>> call = apiService.addFood(multipartBody, _name, _price, _quantity, _describe);
+
+                    call.enqueue(new Callback<Food>() {
                         @Override
-                        public void onResponse(Call<Response<Food>> call, Response<Response<Food>> response) {
+                        public void onResponse(Call<Food> call, Response<Food> response) {
                             if (response.isSuccessful()) {
-                                Toast.makeText(Add_UpdateActivity.this, "Add success", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(Add_UpdateActivity.this, "Thêm sản phẩm thành công", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(Add_UpdateActivity.this, "Thêm sản phẩm thất bại", Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
-                        public void onFailure(Call<Response<Food>> call, Throwable t) {
+                        public void onFailure(Call<Food> call, Throwable t) {
                             Log.d(">>> ADD Success", "onFailure" + t.getMessage());
                         }
                     });
