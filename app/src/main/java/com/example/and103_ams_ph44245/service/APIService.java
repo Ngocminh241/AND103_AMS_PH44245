@@ -14,7 +14,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 
 public interface APIService {
-    String ipv4 = "192.168.1.118";
+    String ipv4 = "192.168.1.65";
     String DOMAIN = "http://"+ ipv4 +":3000/";
 
     @GET("/api/list")

@@ -2,8 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:background="#ffeef2">
+    android:background="#FFFFFF">
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tool_bar"
         android:layout_width="match_parent"
@@ -132,11 +133,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
                 android:layout_marginTop="20dp"
-                android:background="@drawable/border"
+                android:background="@drawable/background_button_login"
                 android:backgroundTint="#ff9a33"
                 android:layout_marginHorizontal="20dp"
                 android:textSize="20sp"
                 android:text="ADD"
+                app:backgroundTint="@null"
                 android:textStyle="bold"
                 android:textColor="#fff" />
         </LinearLayout>
