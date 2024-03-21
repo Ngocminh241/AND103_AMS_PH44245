@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "178421014752",
+    "project_id": "and103-asm",
+    "storage_bucket": "and103-asm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178421014752:android:730bb232c0f1eb750e7085",
+        "android_client_info": {
+          "package_name": "com.example.and103_ams_ph44245"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8UxYbKFT9I-JwthZH30mXJHk5Tw2T-o8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
