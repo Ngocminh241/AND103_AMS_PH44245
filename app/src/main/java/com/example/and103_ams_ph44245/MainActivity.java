@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                     Log.d("API_Response", "Dữ liệu nhận được từ API: " + list.size());
                 } else {
-                    Toast.makeText(MainActivity.this, "Hết cứu", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Khong nhan duoc du lieu", Toast.LENGTH_SHORT).show();
                     Log.e("onResponse: ", String.valueOf(response.code()));
                 }
             }
