@@ -17,10 +17,7 @@
         android:theme="@style/Theme.AND103_AMS_PH44245"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-        <activity
-            android:name=".Add_UpdateActivity"
-            android:exported="false" />
-<!--        <activity-->
+        <!--        <activity-->
 <!--            android:name=".AddActivity"-->
 <!--            android:exported="false" />-->
         <activity
@@ -33,10 +30,10 @@
             android:name=".Register"
             android:exported="false" />
         <activity
-            android:name=".Splashscreenactivity"
+            android:name=".MainActivity"
             android:exported="false"/>
         <activity
-            android:name=".MainActivity"
+            android:name=".Splashscreenactivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
