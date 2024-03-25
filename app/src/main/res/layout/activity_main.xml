@@ -1,34 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
-
+    android:background="#00FFEEF2"
+    tools:context="MainActivity">
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/tool_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#ED6E0C"
-        android:id="@+id/toolbar_home"/>
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_below="@id/toolbar_home"
-        android:id="@+id/recycler"
+        android:background="#ff9a33"/>
+    <!--    <ProgressBar-->
+    <!--        android:id="@+id/progress"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_below="@+id/tool_bar"-->
+    <!--        android:indeterminateOnly="true"-->
+    <!--        android:indeterminateTint="#43AE1B"-->
+    <!--        android:layout_marginTop="30dp"/>-->
+    <SearchView
+        android:id="@+id/search_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btn_add"
-        android:layout_width="wrap_content"
+        android:layout_height="45dp"
+        android:layout_below="@+id/tool_bar"
+        android:layout_margin="10dp"
+        android:queryHint="Search"
+        android:iconifiedByDefault="false"
+        android:maxLines="1"
+        android:background="@drawable/background_input_editext"
+        android:paddingRight="10dp"/>
+    <LinearLayout
+        android:id="@+id/loc_theo_gia"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="40dp"
-        android:layout_marginBottom="40dp"
-        android:backgroundTint="#ED6E0C"
-        android:src="@drawable/item_add" />
+        android:layout_marginHorizontal="10dp"
+        android:gravity="center|end"
+        android:layout_below="@id/search_view">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:text="Giá:"/>
+        <Spinner
+            android:id="@+id/spn_sapxep"
+            android:layout_width="120dp"
+            android:layout_height="40dp"
+            android:layout_marginHorizontal="5dp"
 
+            android:padding="10dp"
+            android:layout_below="@+id/search_view"/>
+    </LinearLayout>
+    <TextView
+        android:id="@+id/list_rong"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:layout_below="@+id/loc_theo_gia"
+        android:layout_marginTop="20dp"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        android:text="Không tìm thấy sản phẩm"/>
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/sf_data"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
 
+        android:layout_below="@+id/loc_theo_gia">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rcv_food"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/item_fruits"
+            android:paddingHorizontal="10dp"
+            android:paddingTop="10dp"
+/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <!--    <ListView-->
+    <!--        android:id="@+id/lv_food"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"/>-->
 </RelativeLayout>

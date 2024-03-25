@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="#00FFEEF2">
+    <!--    <TextView-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:gravity="center"-->
+    <!--        android:textSize="24sp"-->
+    <!--        android:textColor="@color/white"-->
+    <!--        android:textStyle="bold"-->
+    <!--        android:padding="15dp"-->
+    <!--        android:background="#ff9a33"-->
+    <!--        android:text="ADD FRUITS"/>-->
+    <TextView
+        android:id="@+id/tool_bar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Information"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:paddingVertical="8dp"
+        android:textAlignment="center"
+        android:background="#ff9a33"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/img_hinhanh"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_gravity="center"
+                android:scaleType="fitXY"
+                android:background="@drawable/baseline_broken_image_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Name: "/>
+                <EditText
+                    android:id="@+id/edt_ten"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:hint="Enter name..."
+                    android:inputType="text"
+                    android:textColorHint="#2E2E2E"
+                    android:background="@drawable/background_input_editext"
+                    android:textSize="16sp"
+                    android:padding="10dp"
+                    android:drawablePadding="15dp"
+                    android:focusable="false"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Quantity: "/>
+                <EditText
+                    android:id="@+id/edt_soluong"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:hint="Enter quantity..."
+                    android:inputType="numberDecimal"
+                    android:textColorHint="#2E2E2E"
+                    android:background="@drawable/background_input_editext"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:padding="10dp"
+                    android:drawablePadding="15dp"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Price: "/>
+                <EditText
+                    android:id="@+id/edt_gia"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:hint="Enter price..."
+                    android:inputType="numberDecimal"
+                    android:textColorHint="#2E2E2E"
+                    android:background="@drawable/background_input_editext"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:padding="10dp"
+                    android:drawablePadding="15dp"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Status: "/>
+                <!--                <EditText-->
+                <!--                    android:id="@+id/edt_trangthai"-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="50dp"-->
+                <!--                    android:layout_marginHorizontal="20dp"-->
+                <!--                    android:hint="Enter status..."-->
+                <!--                    android:inputType="text"-->
+                <!--                    android:textColorHint="#2E2E2E"-->
+                <!--                    android:background="@drawable/border"-->
+                <!--                    android:textSize="16sp"-->
+                <!--                    android:padding="10dp"-->
+                <!--                    android:drawableLeft="@drawable/money"-->
+                <!--                    android:drawablePadding="15dp"/>-->
+                <EditText
+                    android:id="@+id/spn_trangthai"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:focusable="false"
+                    android:drawableLeft="@drawable/loading"
+                    android:background="@drawable/background_input_editext"
+                    android:paddingLeft="10dp"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Distributor: "/>
+                <EditText
+                    android:id="@+id/spn_nhaphanphoi"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:focusable="false"
+                    android:drawableLeft="@drawable/loading"
+                    android:background="@drawable/background_input_editext"
+                    android:paddingLeft="10dp"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:paddingBottom="25dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingLeft="10dp"
+                    android:textStyle="bold"
+                    android:text="Description: "/>
+                <EditText
+                    android:id="@+id/edt_mota"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:hint="Enter description..."
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:textColorHint="#2E2E2E"
+                    android:background="@drawable/background_input_editext"
+                    android:padding="10dp"
+                    android:drawablePadding="15dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

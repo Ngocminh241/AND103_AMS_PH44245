@@ -1,105 +1,184 @@
 package com.example.and103_ams_ph44245;
 
-import static android.content.ContentValues.TAG;
-
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.bumptech.glide.Glide;
+import com.example.and103_ams_ph44245.Model.Response;
+import com.example.and103_ams_ph44245.Model.User;
+import com.example.and103_ams_ph44245.databinding.ActivityRegisterBinding;
+import com.example.and103_ams_ph44245.service.HttpRequest;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.regex.Pattern;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class Register extends AppCompatActivity {
 
-    private FirebaseAuth mAuth;
-    EditText edt_username;
-    EditText edt_password;
-    EditText edt_cfpassword;
-    Button btn_dangky;
+    private ActivityRegisterBinding binding;
+    private HttpRequest httpRequest;
+    private File file;
 
-    String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-            + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+    private File createFileFormUri (Uri path, String name) {
+        File _file = new File(Register.this.getCacheDir(), name + ".png");
+        try {
+            InputStream in = Register.this.getContentResolver().openInputStream(path);
+            OutputStream out = new FileOutputStream(_file);
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) >0) {
+                out.write(buf, 0, len);
+            }
+            out.close();
+            in.close();
+            Log.d("123123", "createFileFormUri: " +_file);
+            return _file;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        binding = ActivityRegisterBinding.inflate(getLayoutInflater());
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
-        // ánh xạ
-        mAuth = FirebaseAuth.getInstance();
-        edt_username = findViewById(R.id.edt_username);
-        edt_password = findViewById(R.id.edt_password);
-        edt_cfpassword = findViewById(R.id.edt_cfpassword);
-        btn_dangky = findViewById(R.id.btn_signup);
-        findViewById(R.id.btn_back).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-            }
-        });
-        btn_dangky.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onClickSignUp();
-            }
-        });
-        findViewById(R.id.tv_signin).setOnClickListener(new View.OnClickListener() {
+        setContentView(binding.getRoot());
+        httpRequest = new HttpRequest();
+
+        userListener();
+        findViewById(R.id.tv_login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(Register.this, Login.class));
             }
         });
-    }
-    private void onClickSignUp() {
-        String email = edt_username.getText().toString().trim();
-        String password = edt_password.getText().toString().trim();
-        String cfpassword = edt_cfpassword.getText().toString().trim();
 
-        if (!email.isEmpty() || !password.isEmpty() || !cfpassword.isEmpty()) {
-            if (!patternMatches(email, regexPattern)) {
-                Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show();
-            } else if (password.length() < 6) {
-                Toast.makeText(this, "Mật khẩu phải từ 6 ký tự", Toast.LENGTH_SHORT).show();
-            } else if (!password.equals(cfpassword)) {
-                Toast.makeText(this, "Mật khẩu không trùng khớp", Toast.LENGTH_SHORT).show();
-            } else {
-                mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Lấy thông tin tài khoản mới vừa đăng nhập
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Toast.makeText(Register.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
-                            finishAffinity();
-                            Intent intent = new Intent(Register.this, Login.class);
-                            intent.putExtra("username", email);
-                            intent.putExtra("password", password);
-                            startActivity(intent);
-                        } else  {
-                            Log.w(TAG, "signInWithEmailAndPassword:failure", task.getException());
-                            Toast.makeText(Register.this, "Đăng ký thất bại", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+    }
+
+
+    private void userListener() {
+        binding.avatar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chooseImage();
+                Log.d("123123", "onClick: " +123123);
             }
-        } else {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+        });
+
+        binding.btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RequestBody _username = RequestBody.create(MediaType.parse("multipart/form-data"),binding.edUsername.getText().toString().trim());
+                RequestBody _password = RequestBody.create(MediaType.parse("multipart/form-data"),binding.edPassword.getText().toString().trim());
+                RequestBody _email = RequestBody.create(MediaType.parse("multipart/form-data"),binding.edEmail.getText().toString().trim());
+                RequestBody _name = RequestBody.create(MediaType.parse("multipart/form-data"),binding.edName.getText().toString().trim());
+                MultipartBody.Part multipartBody;
+                if (file !=null) {
+                    RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"),file);
+                    multipartBody = MultipartBody.Part.createFormData("avartar",file.getName(),requestFile);
+                }else {
+                    multipartBody = null;
+                }
+                Log.d("zzzzzz", "onClick: " + _username.toString());
+                httpRequest.callAPI().register(_username,_password,_email,_name,multipartBody).enqueue(responseUser);
+            }
+        });
+    }
+    Callback<Response<User>> responseUser = new Callback<Response<User>>() {
+        @Override
+        public void onResponse(Call<Response<User>> call, retrofit2.Response<Response<User>> response) {
+            if (response.isSuccessful()) {
+                Log.d("123123", "onResponse: " + response.body().getStatus());
+                if (response.body().getStatus() ==200) {
+                    Toast.makeText(Register.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Register.this, Login.class);
+                    intent.putExtra("username", binding.edUsername.getText().toString().trim());
+                    intent.putExtra("password", binding.edPassword.getText().toString().trim());
+                    startActivity(intent);
+                }else {
+                    Toast.makeText(Register.this, "Đăng ký thất bại lỗi" + response.body().getStatus(), Toast.LENGTH_SHORT).show();
+                }
+            }
         }
+
+        @Override
+        public void onFailure(Call<Response<User>> call, Throwable t) {
+            t.getMessage();
+        }
+    };
+
+    private void chooseImage() {
+//        if (ContextCompat.checkSelfPermission(RegisterActivity.this,
+//                android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        Log.d("123123", "chooseAvatar: " +123123);
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        getImage.launch(intent);
+//        }else {
+//            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+//
+//        }
     }
-    public static boolean patternMatches(String emailAddress, String regexPattern) {
-        return Pattern.compile(regexPattern)
-                .matcher(emailAddress)
-                .matches();
-    }
+    ActivityResultLauncher<Intent> getImage = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult o) {
+                    if (o.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = o.getData();
+                        Uri imageUri = data.getData();
+
+                        Log.d("RegisterActivity", imageUri.toString());
+
+                        Log.d("123123", "onActivityResult: "+data);
+
+                        file = createFileFormUri(imageUri, "avatar");
+
+                        //binding.avatar.setImageURI(imageUri);
+
+                        Glide.with(binding.avatar)
+                                .load(imageUri)
+                                .centerCrop()
+                                .circleCrop()
+                                .into(binding.avatar);
+
+//                        Glide.with(RegisterActivity.this)
+//                                .load(file)
+//                                .thumbnail(Glide.with(RegisterActivity.this).load(R.drawable.baseline_broken_image_24))
+//                                .centerCrop()
+//                                .circleCrop()
+////                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+//                                .skipMemoryCache(true)
+//                                .into(binding.avatar);
+                    }
+                }
+            });
+
 }

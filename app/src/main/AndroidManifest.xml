@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,9 +18,14 @@
         android:theme="@style/Theme.AND103_AMS_PH44245"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-        <!--        <activity-->
-<!--            android:name=".AddActivity"-->
-<!--            android:exported="false" />-->
+        <activity
+            android:name=".DistributorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddUpdate"
+            android:exported="false" /> <!-- <activity -->
+        <!-- android:name=".AddActivity" -->
+        <!-- android:exported="false" /> -->
         <activity
             android:name=".Login"
             android:exported="false" />
@@ -30,10 +36,10 @@
             android:name=".Register"
             android:exported="false" />
         <activity
-            android:name=".Splashscreenactivity"
-            android:exported="false"/>
-        <activity
             android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Splashscreenactivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

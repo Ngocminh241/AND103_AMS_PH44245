@@ -4,6 +4,7 @@ import static android.content.ContentValues.TAG;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -17,11 +18,17 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.and103_ams_ph44245.Dialog.LoadingDialog;
+import com.example.and103_ams_ph44245.Model.User;
+import com.example.and103_ams_ph44245.service.HttpRequest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import com.example.and103_ams_ph44245.Model.Response;
 
 public class Login extends AppCompatActivity {
 
@@ -31,6 +38,7 @@ public class Login extends AppCompatActivity {
     Button btn_dangnhap;
     TextView tv_quenmatkhau;
     LoadingDialog loadingDialog;
+    HttpRequest httpRequest = new HttpRequest();
     @SuppressLint("ResourceType")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,38 +78,78 @@ public class Login extends AppCompatActivity {
         });
     }
     private void onClickLogin() {
-        String email = edt_username.getText().toString().trim();
-        String password = edt_password.getText().toString().trim();
-        if (!email.isEmpty() || !password.isEmpty()) {
-                mAuth = FirebaseAuth.getInstance();
-                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Lấy thông tin tài khoản mới vừa đăng nhập
-                            FirebaseUser user = mAuth.getCurrentUser();
-//                            Toast.makeText(Login.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-//                            finishAffinity();
-//                            startActivity(new Intent(Login.this, MainActivity.class));
-                            loadingDialog.show();
-                            Runnable runnable = new Runnable() {
-                                @Override
-                                public void run() {
-                                    loadingDialog.cancel();
-                                    Toast.makeText(Login.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                                    finishAffinity();
-                                    startActivity(new Intent(Login.this, MainActivity.class));
-                                }
-                            };
-                            new Handler().postDelayed(runnable, 2000);
-                        } else  {
-                            Log.w(TAG, "signInWithEmailAndPassword:failure", task.getException());
-                            Toast.makeText(Login.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        String _username = edt_username.getText().toString().trim();
+        String _password = edt_password.getText().toString().trim();
+        if (!_username.isEmpty() || !_password.isEmpty()) {
+            loadingDialog.show();
+            User user = new User();
+            user.setUsername(_username);
+            user.setPassword(_password);
+            httpRequest.callAPI().login(user).enqueue(responseUser);
+//            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+//                @Override
+//                public void onComplete(@NonNull Task<AuthResult> task) {
+//                    if (task.isSuccessful()) {
+//                        // Lấy thông tin tài khoản mới vừa đăng nhập
+//                        FirebaseUser user = mAuth.getCurrentUser();
+//                        if (user != null) {
+//                            user.getIdToken(true)
+//                                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+//                                        public void onComplete(@NonNull Task<GetTokenResult> task) {
+//                                            if (task.isSuccessful()) {
+//                                                String token = task.getResult().getToken();
+//                                                loadingDialog.cancel();
+//                                                Toast.makeText(Login.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+//                                                finishAffinity();
+//                                                Intent intent = new Intent(Login.this, MainActivity.class);
+//                                                intent.putExtra("token", token);
+//                                                startActivity(intent);
+//                                                // Token lấy được sẽ được sử dụng ở đây
+//                                                Log.d("TOKEN", token);
+//                                            } else {
+//                                                // Xử lý khi không lấy được token
+//                                                Log.e("TOKEN", "Failed to get token");
+//                                            }
+//                                        }
+//                                    });
+//                        }
+//
+//                    } else  {
+//                        Log.w(TAG, "signInWithEmailAndPassword:failure", task.getException());
+//                        loadingDialog.cancel();
+//                        Toast.makeText(Login.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//            });
         } else {
             Toast.makeText(this, "Vui lòng nhập thông tin đăng nhập", Toast.LENGTH_SHORT).show();
         }
     }
+    Callback<Response<User>> responseUser = new Callback<Response<User>>() {
+        @Override
+        public void onResponse(Call<Response<User>> call, retrofit2.Response<Response<User>> response) {
+            if (response.isSuccessful()) {
+                if (response.body().getStatus() ==200) {
+                    Toast.makeText(Login.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+                    SharedPreferences sharedPreferences = getSharedPreferences("INFO",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("token", response.body().getToken());
+                    editor.putString("refreshToken", response.body().getRefreshToken());
+                    editor.putString("id", response.body().getData().get_id());
+                    editor.apply();
+                    startActivity(new Intent(Login.this, MainActivity.class));
+                }
+            } else {
+                Toast.makeText(Login.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
+                loadingDialog.cancel();
+            }
+        }
+
+        @Override
+        public void onFailure(Call<Response<User>> call, Throwable t) {
+            Toast.makeText(Login.this, "Đăng nhập thất bại", Toast.LENGTH_SHORT).show();
+            loadingDialog.cancel();
+            t.getMessage();
+        }
+    };
 }

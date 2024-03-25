@@ -1,246 +1,414 @@
 package com.example.and103_ams_ph44245;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+import static android.content.ContentValues.TAG;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.SearchView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.app.AlertDialog;
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
-import com.example.and103_ams_ph44245.Adapter.SanPhamAdapter;
-import com.example.and103_ams_ph44245.Model.SanPhamModel;
-import com.example.and103_ams_ph44245.service.APIServer;
-import com.example.and103_ams_ph44245.service.ItemClickListener;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.and103_ams_ph44245.Adapter.AdapterFruit;
+import com.example.and103_ams_ph44245.Model.Fruit;
+import com.example.and103_ams_ph44245.Model.Response;
+import com.example.and103_ams_ph44245.R;
+import com.example.and103_ams_ph44245.service.HttpRequest;
+import com.example.and103_ams_ph44245.service.OnClickListen;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import com.example.and103_ams_ph44245.databinding.DialogEditBinding;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+
+    DialogEditBinding binding1;
+    FirebaseAuth mAuth;
+    ArrayList<Fruit> list = new ArrayList<>();
+    RecyclerView rcv;
+    AdapterFruit adapterFruit;
+    HttpRequest httpRequest;
+    SwipeRefreshLayout swipeRefreshLayout;
     Toolbar toolbar;
-    RecyclerView recyclerView;
-    SanPhamAdapter adapter;
-    ArrayList<SanPhamModel> list;
-    private String url =  "http://192.168.1.65:3000/";
-    FloatingActionButton btn_add;
-    ImageView imgUp;
-    Uri imageUri;
-
-    Retrofit retrofit;
-
-    APIServer apiService;
+    String token;
+    SearchView searchView;
+    ArrayList<Fruit> listSeacrch = new ArrayList<>();
+    TextView tv_list_rong;
+    Spinner spn_sapxep;
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        token = getIntent().getStringExtra("token");
+        sharedPreferences = getSharedPreferences("INFO",MODE_PRIVATE);
 
-        toolbar = findViewById(R.id.toolbar_home);
-        recyclerView = findViewById(R.id.recycler);
-        btn_add = findViewById(R.id.btn_add);
-        retrofit = new Retrofit.Builder()
-                .baseUrl(url)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        apiService = retrofit.create(APIServer.class);
-        handleCallData();
-        btn_add.setOnClickListener(v -> {
-            showDialog(0, (SanPhamModel) null);
+        token = sharedPreferences.getString("token","");
+//        getListCity();
+        tv_list_rong = findViewById(R.id.list_rong);
+        rcv = findViewById(R.id.rcv_food);
+        searchView = findViewById(R.id.search_view);
+        spn_sapxep = findViewById(R.id.spn_sapxep);
+        httpRequest = new HttpRequest();
+//        progressBar = findViewById(R.id.progress);
+        swipeRefreshLayout = findViewById(R.id.sf_data);
+        swipeRefreshLayout.setOnRefreshListener(MainActivity.this);
+        //
+        toolbar = findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("HOME");
+        getSupportActionBar().setSubtitle("Fruits Management");
+        //
+        handleCallDataFruits();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                filterList(s);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                filterList(s);
+                return false;
+            }
         });
-        toolbar.setTitle("Danh sách sản phẩm");
+        ArrayList<String> listSx = new ArrayList<>();
+        listSx.add("-- Mặc định --");
+        listSx.add("Tăng dần");
+        listSx.add("Giàm dần");
+        ArrayAdapter ad = new ArrayAdapter(
+                MainActivity.this,
+                android.R.layout.simple_spinner_dropdown_item,
+                listSx);
+        spn_sapxep.setAdapter(ad);
+        spn_sapxep.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    handleCallDataFruits();
+                } else if (i == 1) {
+                    SapXepList(0);
+                } else {
+                    SapXepList(1);
+                }
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
+    private void filterList(String text) {
 
-    private void showDialog(int type, SanPhamModel sanPhamModel) {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(MainActivity.this);
-        View v1 = LayoutInflater.from(MainActivity.this).inflate(R.layout.item_add, null);
-        builder.setView(v1);
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-        EditText edtName = v1.findViewById(R.id.edt_name);
-        EditText edtPrice = v1.findViewById(R.id.edt_price);
-        EditText edtQuantity = v1.findViewById(R.id.edt_quantity);
-        EditText edtInventory = v1.findViewById(R.id.edt_inventory);
-        TextView tv_title = v1.findViewById(R.id.tv_title);
-        alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if (!text.equals("")) {
+            listSeacrch.clear();
+            httpRequest.callAPI().searchFruitByName(text).enqueue(new Callback<Response<ArrayList<Fruit>>>() {
+                @Override
+                public void onResponse(Call<Response<ArrayList<Fruit>>> call, retrofit2.Response<Response<ArrayList<Fruit>>> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body().getStatus() == 200) {
+                            listSeacrch = response.body().getData();
+                            getData(listSeacrch);
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(Call<Response<ArrayList<Fruit>>> call, Throwable t) {
 
-        imgUp = v1.findViewById(R.id.img_dialog);
-        if (type != 0) {
-            tv_title.setText("Sửa Sản Phẩm");
-            edtName.setText(sanPhamModel.getName());
-            edtPrice.setText(sanPhamModel.getPrice()+"");
-            edtQuantity.setText(sanPhamModel.getQuantity()+"");
-            edtInventory.setText(sanPhamModel.getInventory()+"");
-            Glide.with(MainActivity.this)
-                    .load(sanPhamModel.getImage())
-                    .placeholder(R.drawable.noimageicon)
-                    .into(imgUp);
+                }
+            });
+            httpRequest.callAPI().searchFruitById(text).enqueue(new Callback<Response<ArrayList<Fruit>>>() {
+                @Override
+                public void onResponse(Call<Response<ArrayList<Fruit>>> call, retrofit2.Response<Response<ArrayList<Fruit>>> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body().getStatus() == 200) {
+                            listSeacrch = response.body().getData();
+                            getData(listSeacrch);
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(Call<Response<ArrayList<Fruit>>> call, Throwable t) {
+
+                }
+            });
+            httpRequest.callAPI().searchFruitByPrice(text).enqueue(new Callback<Response<ArrayList<Fruit>>>() {
+                @Override
+                public void onResponse(Call<Response<ArrayList<Fruit>>> call, retrofit2.Response<Response<ArrayList<Fruit>>> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body().getStatus() == 200) {
+                            listSeacrch = response.body().getData();
+                            getData(listSeacrch);
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(Call<Response<ArrayList<Fruit>>> call, Throwable t) {
+
+                }
+            });
+        } else {
+            handleCallDataFruits();
         }
-        imgUp.setOnClickListener(view1 -> {
-            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*");
-            imagePickerLauncher.launch(intent);
-        });
-        Button btnSave = v1.findViewById(R.id.btn_save);
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (type == 0) {
-                    if (edtName.getText().toString().isEmpty() || edtPrice.getText().toString().isEmpty() || edtQuantity.getText().toString().isEmpty() || edtInventory.getText().toString().isEmpty() && imageUri != null) {
-                        Toast.makeText(MainActivity.this, "Vui lòng không bỏ trống", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    String name = edtName.getText().toString();
-                    int price = Integer.parseInt(edtPrice.getText().toString());
-                    int quantity = Integer.parseInt(edtQuantity.getText().toString());
-                    int inventory = Integer.parseInt(edtInventory.getText().toString());
-
-                    String imgUri = imageUri.toString();
-
-                    SanPhamModel sanPhamModelNew = new SanPhamModel();
-                    sanPhamModelNew.setName(name);
-                    sanPhamModelNew.setQuantity(quantity);
-                    sanPhamModelNew.setInventory(inventory);
-                    sanPhamModelNew.setImage(imgUri);
-                    sanPhamModelNew.setPrice(price);
-
-                    retrofit = new Retrofit.Builder()
-                            .baseUrl(url)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
-
-                    Call<Void> call = apiService.postSanPham(sanPhamModelNew);
-                    call.enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            if (response.isSuccessful()) {
-                                handleCallData();
-                                alertDialog.dismiss();
-                                Toast.makeText(MainActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
-                                Log.e("loi", String.valueOf(response.code()));
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-
-                        }
-                    });
-                } else {
-                    if (edtName.getText().toString().isEmpty() || edtPrice.getText().toString().isEmpty() || edtQuantity.getText().toString().isEmpty() || edtInventory.getText().toString().isEmpty() && imageUri != null) {
-                        Toast.makeText(MainActivity.this, "Vui lòng không bỏ trống", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    String name = edtName.getText().toString();
-                    int price = Integer.parseInt(edtPrice.getText().toString());
-                    int quantity = Integer.parseInt(edtQuantity.getText().toString());
-                    int inventory = Integer.parseInt(edtInventory.getText().toString());
-                    String imgUri;
-                    if (imageUri != null) {
-                        imgUri = imageUri.toString();
-                    } else {
-                        imgUri = sanPhamModel.getImage();
-                    }
-                    sanPhamModel.setName(name);
-                    sanPhamModel.setPrice(price);
-                    sanPhamModel.setImage(imgUri);
-                    sanPhamModel.setInventory(inventory);
-                    sanPhamModel.setQuantity(quantity);
-                    Call<Void> call = apiService.putSanPham(sanPhamModel.get_id(), sanPhamModel);
-                    call.enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            if (response.isSuccessful()) {
-                                handleCallData();
-                                alertDialog.dismiss();
-                                Toast.makeText(MainActivity.this, "Sửa thành công", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Sửa thất bại", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-
-                        }
-                    });
-                }
-            }
-        });
-        Button btnCancel = v1.findViewById(R.id.btn_cancel);
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                alertDialog.dismiss();
-            }
-        });
     }
-
-    private void handleCallData() {
-        Call<ArrayList<SanPhamModel>> call = apiService.getSanPham();
-        call.enqueue(new Callback<ArrayList<SanPhamModel>>() {
+    private void SapXepList(int sapxep) {
+        listSeacrch.clear();
+        httpRequest.callAPI().getFruits().enqueue(new Callback<Response<ArrayList<Fruit>>>() {
             @Override
-            public void onResponse(Call<ArrayList<SanPhamModel>> call, Response<ArrayList<SanPhamModel>> response) {
+            public void onResponse(Call<Response<ArrayList<Fruit>>> call, retrofit2.Response<Response<ArrayList<Fruit>>> response) {
                 if (response.isSuccessful()) {
-                    list = response.body();
-                    adapter = new SanPhamAdapter(MainActivity.this, list);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                    recyclerView.setAdapter(adapter);
-                    adapter.setItemClickListener(new ItemClickListener() {
-                        @Override
-                        public void UpdateItem(int position) {
-                            SanPhamModel sanPhamModel = list.get(position);
-                            showDialog(1,sanPhamModel);
+                    if (response.body().getStatus() == 200) {
+                        listSeacrch = response.body().getData();
+                        if (sapxep == 0) {
+                            sapXepTang();
+                        } else {
+                            sapXepGiam();
                         }
-                    });
-                    Log.d("API_Response", "Dữ liệu nhận được từ API: " + list.size());
+                        getData(listSeacrch);
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Response<ArrayList<Fruit>>> call, Throwable t) {
+
+            }
+        });
+    }public void sapXepGiam() {
+        Collections.sort(listSeacrch, new Comparator<Fruit>() {
+            @Override
+            public int compare(Fruit fruit, Fruit t1) {
+                if (Double.valueOf(fruit.getPrice()) > Double.valueOf(t1.getPrice())) {
+                    return -1;
                 } else {
-                    Toast.makeText(MainActivity.this, "Khong nhan duoc du lieu", Toast.LENGTH_SHORT).show();
-                    Log.e("onResponse: ", String.valueOf(response.code()));
+                    if (Double.valueOf(fruit.getPrice()) == Double.valueOf(t1.getPrice()) ) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                }
+            }
+        });
+    }
+    public void sapXepTang() {
+        Collections.sort(listSeacrch, new Comparator<Fruit>() {
+            @Override
+            public int compare(Fruit fruit, Fruit t1) {
+                if (Double.valueOf(fruit.getPrice()) > Double.valueOf(t1.getPrice())) {
+                    return 1;
+                } else {
+                    if (Double.valueOf(fruit.getPrice()) == Double.valueOf(t1.getPrice()) ) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                }
+            }
+        });
+    }
+    private void handleCallDataFruits() {
+        swipeRefreshLayout.setRefreshing(true);
+        httpRequest.callAPI().getListFruit("Bearer " + token).enqueue(new Callback<Response<ArrayList<Fruit>>>() {
+            @Override
+            public void onResponse(Call<Response<ArrayList<Fruit>>> call, retrofit2.Response<Response<ArrayList<Fruit>>> response) {
+                if (response.isSuccessful()) {
+                    if (response.body().getStatus() ==200) {
+                        list = response.body().getData();
+                        getData(list);
+//                    Toast.makeText(HomeActivity.this, response.body().getMessenger(), Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<ArrayList<SanPhamModel>> call, Throwable t) {
-                Log.e("Main", t.getMessage());
+            public void onFailure(Call<Response<ArrayList<Fruit>>> call, Throwable t) {
+
             }
         });
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_option, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
-    private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    imageUri = result.getData().getData();
-                    if (imageUri != null) {
-                        imgUp.setImageURI(imageUri);
-                    }
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getMenuInflater().inflate(R.menu.menu_context, menu);
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.item_them) {
+            Intent intent = new Intent(MainActivity.this, AddUpdate.class);
+            Bundle bundle = new Bundle();
+            bundle.putInt("type", 1);
+//                bundle.putSerializable("fruit", fruit);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        }
+        else if (item.getItemId() == R.id.item_home) {
+            startActivity(new Intent(MainActivity.this, MainActivity.class));
+            Toast.makeText(MainActivity.this, "Trang chủ", Toast.LENGTH_SHORT).show();
+        }else if (item.getItemId() == R.id.item_distributor) {
+            startActivity(new Intent(MainActivity.this, DistributorActivity.class));
+            Toast.makeText(MainActivity.this, "Nhà phân phối", Toast.LENGTH_SHORT).show();
+        }else if (item.getItemId() == R.id.item_dangxuat) {
+            mAuth = FirebaseAuth.getInstance();
+            mAuth.signOut();
+            finishAffinity();
+            startActivity(new Intent(MainActivity.this, Login.class));
+            Toast.makeText(MainActivity.this, "Đăng xuất", Toast.LENGTH_SHORT).show();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    private void getData(ArrayList<Fruit> listF) {
+        adapterFruit = new AdapterFruit(MainActivity.this, listF);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        rcv.setLayoutManager(linearLayoutManager);
+        rcv.setAdapter(adapterFruit);
+        adapterFruit.setOnClickListen(new OnClickListen() {
+            @Override
+            public void updateItem(Fruit fruit) {
+                Intent intent = new Intent(MainActivity.this, AddUpdate.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("id", fruit.get_id());
+                bundle.putString("name", fruit.getName());
+                if (fruit.getImage().size()!=0){
+                    bundle.putString("image", fruit.getImage().get(0));
+                }else {
+                    bundle.putString("image", String.valueOf(R.drawable.baseline_broken_image_24));
                 }
+//                bundle.putString("image", fruit.getImage().get(0));
+                bundle.putString("quantity", fruit.getQuantity());
+                bundle.putString("price", fruit.getPrice());
+                bundle.putString("status", fruit.getStatus());
+                bundle.putString("description", fruit.getDescription());
+                bundle.putString("id_distributor", fruit.getDistributor().get_id());
+                bundle.putInt("type", 0);
+//                bundle.putSerializable("fruit", fruit);
+                intent.putExtras(bundle);
+                startActivity(intent);
             }
-    );
 
+            @Override
+            public void deleteItem(Fruit fruit) {
+                Dialod_Delete(fruit);
+            }
+            @Override
+            public void MoreItem(Fruit fruit) {
+                showDialogMore(fruit);
+            }
+        });
+//        progressBar.setVisibility(View.INVISIBLE);
+        swipeRefreshLayout.setRefreshing(false);
+        if (listF.size() == 0) {
+            tv_list_rong.setVisibility(View.VISIBLE);
+        } else {
+            tv_list_rong.setVisibility(View.INVISIBLE);
+        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handleCallDataFruits();
+    }
+
+    @Override
+    public void onRefresh() {
+        handleCallDataFruits();
+    }
+    private void showDialogMore(Fruit fruit) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        binding1 = DialogEditBinding.inflate(LayoutInflater.from(this));
+        builder.setView(binding1.getRoot());
+        AlertDialog alertDialog = builder.create();
+
+//        ds_image = new ArrayList<>();
+//        configSpinner();
+
+        binding1.edtTen.setText(fruit.getName());
+        binding1.edtSoluong.setText(fruit.getQuantity());
+        binding1.edtGia.setText(fruit.getPrice());
+//        binding1.edStatus.setText(fruit.getStatus());
+        binding1.edtMota.setText(fruit.getDescription());
+//        binding1.spnNhaphanphoi.setSelection(fruit.getDistributor());
+//        binding1.spnTrangthai.setSelection(Integer.parseInt(fruit.getStatus()));
+
+        if (fruit.getImage().size()!=0){
+            String url  = fruit.getImage().get(0);
+            String newUrl = url.replace("localhost", "10.24.8.202");
+
+            Glide.with(MainActivity.this)
+                    .load(newUrl)
+                    .thumbnail(Glide.with(MainActivity.this).load(R.drawable.baseline_broken_image_24))
+                    .into(binding1.imgHinhanh);
+//            Log.d("321321", "onBindViewHolder: "+fruit.get_id().getImage().get(0));
+        }else {
+//            String url  = fruit.getImage().get(0);
+//            String newUrl = url.replace("localhost", "192.168.1.65");
+//            Glide.with(this)
+//                    .load(newUrl)
+//                    .thumbnail(Glide.with(this).load(R.drawable.baseline_broken_image_24))
+//                    .into(binding1.avatar);
+        }
+        alertDialog.show();
+    }
+    private void Dialod_Delete(Fruit fruit) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setMessage("Bạn có chắc chắn muốn xóa không ?");
+        builder.setIcon(R.drawable.warning).setTitle("Cảnh Báo");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                httpRequest.callAPI().deleteFruit(fruit.get_id()).enqueue(new Callback<Response<Void>>() {
+                    @Override
+                    public void onResponse(Call<Response<Void>> call, retrofit2.Response<Response<Void>> response) {
+                        if (response.isSuccessful()) {
+                            if (response.body().getStatus() == 200) {
+                                handleCallDataFruits();
+                                adapterFruit.notifyDataSetChanged();
+                                Toast.makeText(MainActivity.this, "Xóa thành công", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Response<Void>> call, Throwable t) {
+
+                    }
+                });
+            }
+        }).setNegativeButton("Cancel", null);
+        builder.show();
+    }
 }

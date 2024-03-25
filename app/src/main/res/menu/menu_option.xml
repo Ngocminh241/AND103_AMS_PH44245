@@ -9,4 +9,12 @@
         android:icon="@drawable/baseline_add_24"
         android:title="Thêm"
         app:showAsAction="always"/>
+    <item
+        android:id="@+id/item_distributor"
+        android:title="Nhà Phân Phối"
+        />
+    <item
+        android:id="@+id/item_home"
+        android:title="Trang Chủ"
+        />
 </menu>

@@ -12,5 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
 rootProject.name = "AND103_AMS_PH44245"
-include ':app'
+include(":app")
+

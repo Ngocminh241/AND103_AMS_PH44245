@@ -135,8 +135,8 @@
             </LinearLayout>
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="170dp"
-                android:layout_gravity="end"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
                 android:src="@drawable/bcgr2"
                 android:scaleType="fitXY"/>
         </LinearLayout>
